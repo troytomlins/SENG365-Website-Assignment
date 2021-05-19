@@ -48,6 +48,11 @@
             {{ confirmPasswordError }}
           </div>
         </div>
+        <div class="row" v-if="registerError">
+          <div class="alert alert-danger my-4">
+            {{ registerError }}
+          </div>
+        </div>
         <button type="button" class="btn btn-outline-primary mx-2 my-2">Back</button>
         <button type="button" class="btn btn-primary mx-2 my-2" @click="addNewUser($event)">Submit</button>
       </form>
@@ -58,6 +63,7 @@
 <script>
 import Api from "@/Api";
 import User from "../config/User"
+import Cookies from 'js-cookie'
 export default {
   name: "Register",
   components: {
@@ -79,7 +85,9 @@ export default {
       passwordError: "",
 
       confirmPassword: "",
-      confirmPasswordError: ""
+      confirmPasswordError: "",
+
+      registerError: ""
     }
   },
   methods: {
@@ -186,10 +194,22 @@ export default {
 
       const user = new User(userData);
 
+
+
       Api.addNewUser(user).then((res) => {
-        console.log(res);
+        const data = res.data;
+        Cookies.set("userId", data.userId)
+        Cookies.set("token", data.token)
+        this.$router.push({name: 'Home'})
       }).catch((e) => {
-        console.log(e)
+        if (e.response.status === 400) {
+          console.log("statusMessage",e.response.statusText)
+          if (e.response.statusText === "Bad Request: email already in use") {
+            this.registerError = "Email already in use"
+          } else {
+            this.registerError = "BAD_REQUEST"
+          }
+        }
       })
 
     }

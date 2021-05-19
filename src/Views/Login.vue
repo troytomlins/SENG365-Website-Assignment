@@ -20,10 +20,10 @@
             {{ passwordError }}
           </div>
         </div>
-        <div class="row">
-          <p class="invalid-tooltip">
+        <div class="row" v-if="loginError">
+          <div class="alert alert-danger my-4">
             {{ loginError }}
-          </p>
+          </div>
         </div>
         <div class="row my-4">
           <div class="col">
@@ -42,6 +42,7 @@
 <script>
 import User from '../config/User.js'
 import Api from "@/Api";
+import Cookies from 'js-cookie'
 export default {
   name: "Login",
   data() {
@@ -89,9 +90,13 @@ export default {
       }
 
       Api.login(this.email, this.password).then((res) => {
-        console.log(res)
+        const data = res.data;
+        Cookies.set("userId", data.userId);
+        Cookies.set("token", data.token);
+        this.$router.push({name: 'Home'})
       }).catch((error) => {
-        if (error.status == 400) {
+        console.log(error.response.status)
+        if (error.response.status === 400) {
           this.loginError = "Email/Password is incorrect"
         } else if (error.status === 500) {
           console.log(error);
