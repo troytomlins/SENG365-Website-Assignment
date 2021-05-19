@@ -14,7 +14,9 @@ export class User{
 // Endpoints
 export default {
 
-    addNewUser: (user) => instance.post('/user/register', {...user.data}, {withCredentials: true})
+    addNewUser: (user) => instance.post('/user/register', {...user.data}, {withCredentials: true}),
+
+    login: (email, password) => instance.post('/users/login', {email, password}, {withCredentials: true})
 
 
 }

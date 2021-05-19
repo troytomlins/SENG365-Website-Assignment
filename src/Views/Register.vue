@@ -2,7 +2,7 @@
   <div class="container">
     <div class="container shadow align-content-center mx-5 my-3" id="register-form">
       <form id="registration" class="col-9 mx-auto needs-validation">
-        <p class="h1">Registration</p>
+        <h1>Registration</h1>
         <div class="row mb-2">
           <div class="col">
             <label for="fName" class="form-label">First Name</label>

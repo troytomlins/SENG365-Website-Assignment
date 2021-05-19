@@ -1,23 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { createApp } from 'vue'
-import 'bootstrap'
+import '../node_modules/bootstrap/dist/css/bootstrap.css';
 import App from './App.vue'
-
-// Import bootstrap (installed using npm)
-import 'bootstrap/dist/css/bootstrap.css';
 
 const routes = [
     {
+        name: "Login",
         path: "/login",
         component: () => import('./Views/Login')
     },
     {
+        name: "Register",
         path: "/register",
         component: () => import('./Views/Register')
     },
     {
-        path: "/register",
-        component: () => import('./Views/Register')
+        name: "Home",
+        path: "/",
+        component: () => import('./Views/Home')
     }
 ];
 
