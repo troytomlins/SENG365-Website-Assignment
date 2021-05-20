@@ -18,6 +18,16 @@ const routes = [
         name: "Home",
         path: "/",
         component: () => import('./Views/Home')
+    },
+    {
+        name: "Events",
+        path: "/events",
+        component: () => import('./Views/Events')
+    },
+    {
+        name: "Event",
+        path: "/events/:id",
+        component: () => import('./Views/Event')
     }
 ];
 

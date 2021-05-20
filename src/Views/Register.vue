@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container" id="register">
     <div class="container shadow align-content-center mx-5 my-3" id="register-form">
       <form id="registration" class="col-9 mx-auto needs-validation">
         <h1>Registration</h1>
@@ -53,7 +53,7 @@
             {{ registerError }}
           </div>
         </div>
-        <button type="button" class="btn btn-outline-primary mx-2 my-2">Back</button>
+        <button type="button" class="btn btn-outline-primary mx-2 my-2" @click="navigateTo('Login')">Back</button>
         <button type="button" class="btn btn-primary mx-2 my-2" @click="addNewUser($event)">Submit</button>
       </form>
     </div>
@@ -91,6 +91,9 @@ export default {
     }
   },
   methods: {
+    navigateTo(page) {
+      this.$router.push({name: page})
+    },
     toggleInvalidClass(errorMessage) {
       let classList = ['form-control']
       if (errorMessage) {
@@ -113,6 +116,16 @@ export default {
         errorMessage = `Input must be between ${minLength} and ${maxLength} characters long.`
       }
       return errorMessage;
+    },
+    logInUser() {
+      Api.login(this.email, this.password).then((res) => {
+        const data = res.data;
+        Cookies.set("userId", data.userId);
+        Cookies.set("token", data.token);
+        this.$router.push({name: 'Home'})
+      }).catch(() => {
+        this.$router.push({name: 'Login'});
+      });
     },
     addNewUser(e) {
       e.preventDefault(); // Stops page from reloading
@@ -196,19 +209,15 @@ export default {
 
 
 
-      Api.addNewUser(user).then((res) => {
-        const data = res.data;
-        Cookies.set("userId", data.userId)
-        Cookies.set("token", data.token)
-        this.$router.push({name: 'Home'})
-      }).catch((e) => {
+      Api.addNewUser(user).then(() => {this.logInUser()}).catch((e) => {
         if (e.response.status === 400) {
-          console.log("statusMessage",e.response.statusText)
           if (e.response.statusText === "Bad Request: email already in use") {
             this.registerError = "Email already in use"
           } else {
             this.registerError = "BAD_REQUEST"
           }
+        } else {
+          this.registerError = "There was a problem with the request"
         }
       })
 

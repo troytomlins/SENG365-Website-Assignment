@@ -1,8 +1,18 @@
 <template>
-  <div id="main">
-    <div class="container shadow align-content-center py-3" id="login-form">
-      <form id="login" class="col-8 mx-auto my-2">
+  <div id="login">
+    <div class="container shadow align-content-center py-3" id="login-container">
+      <form id="login-form" class="col-8 mx-auto my-2">
+        <div class="row">
+        <div class="col-1">
+          <button class="btn btn-primary my-1 float-start" @click="navigateTo('Home')">Back</button>
+        </div>
+        <div class="col-10">
         <h1>Login</h1>
+        </div>
+        <div class="col-1">
+
+        </div>
+        </div>
         <br>
         <div class="row my-1">
           <label class="form-label" for="email">Email</label>
@@ -95,7 +105,6 @@ export default {
         Cookies.set("token", data.token);
         this.$router.push({name: 'Home'})
       }).catch((error) => {
-        console.log(error.response.status)
         if (error.response.status === 400) {
           this.loginError = "Email/Password is incorrect"
         } else if (error.status === 500) {
@@ -110,7 +119,11 @@ export default {
 
 <style scoped>
 
-#login-form {
+#login {
+  margin-top: 150px;
+}
+
+#login-container {
   background-color: #f9f9f9;
 }
 
