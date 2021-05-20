@@ -96,7 +96,6 @@ export default {
         this.setPrice(data.fee)
         this.setDate(data.date);
         this.setCategories(data.categories);
-        this.setOrganiserPhoto();
 
       }).catch((e) => {
         console.log(e);
@@ -149,12 +148,13 @@ export default {
 
       }
     },
-    setOrganiserPhoto() {
+    setOrganiserPhoto() { // TODO
 
     }
   },
   mounted() {
     this.getEvent();
+    this.setOrganiserPhoto();
   }
 }
 </script>

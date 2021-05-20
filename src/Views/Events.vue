@@ -1,15 +1,26 @@
 <template>
   <div>
     <Navbar></Navbar>
-    <div class="container shadow align-content-center my-4">
-      <event
-          v-for="event in pageEvents" :id="event.index" v-bind:key="event.index"
-          v-bind:eventId="event.eventId" v-bind:title="event.title" v-bind:capacity="event.capacity"
-          v-bind:categories="event.categories" v-bind:date="event.date"
-          v-bind:numAcceptedAttendees="event.numAcceptedAttendees"
-          v-bind:organizerFirstName="event.organizerFirstName"
-          v-bind:organizerLastName="event.organizerLastName"
-      />
+    <div class="container">
+      <div class="shadow align-content-center my-4">
+        <event
+            v-for="event in pageEvents" :id="event.index" v-bind:key="event.index"
+            v-bind:eventId="event.eventId" v-bind:title="event.title" v-bind:capacity="event.capacity"
+            v-bind:categories="event.categories" v-bind:date="event.date"
+            v-bind:numAcceptedAttendees="event.numAcceptedAttendees"
+            v-bind:organizerFirstName="event.organizerFirstName"
+            v-bind:organizerLastName="event.organizerLastName"
+        />
+      </div>
+      <nav aria-label="Page navigation example">
+        <ul class="pagination">
+          <li class="page-item" v-if="page2"><a class="page-link" @click="pageDown()">Previous</a></li>
+          <li class="page-item"><a class="page-link" @click="pageChange(page1)">{{ page1 }}</a></li>
+          <li class="page-item" v-if="page2"><a class="page-link" @click="pageChange(page2)">{{ page2 }}</a></li>
+          <li class="page-item" v-if="page3"><a class="page-link" @click="pageChange(page3)">{{ page3 }}</a></li>
+          <li class="page-item" v-if="page2"><a class="page-link" @click="pageUp()">Next</a></li>
+        </ul>
+      </nav>
     </div>
   </div>
 </template>
@@ -27,12 +38,18 @@ export default {
   data() {
     return {
       currentPage: "",
-      filterCatIds: [],
       events: [],
       pageEvents: [],
+
+      filterCatIds: [],
       categories: [],
-      page: 0,
-      allCatNames: []
+      allCatNames: [],
+
+      page: 1,
+      totalPages: 0,
+      page1: null,
+      page2: null,
+      page3: null
     }
   },
   methods: {
@@ -78,14 +95,8 @@ export default {
       }).catch((e) => {
         console.log(e)
       })
-      let numEvents = 0;
-      if (this.events.length > 10) {
-        numEvents = 10;
-      } else {
-        numEvents = this.events.length
-      }
       // for each event...
-      for(let i=0; i < numEvents; i++) {
+      for(let i=0; i < this.events.length; i++) {
         // for each category in event...
         for(let j=0; j < this.events[i].categories.length; j++) {
           // find each categories name
@@ -103,8 +114,72 @@ export default {
       this.pageEvents = [];
       await this.search()
       await this.setCategories()
-      this.pageEvents = this.events.slice(0, 10)
-    }
+      this.setPages();
+    },
+    setPages() {
+      let entries = this.events.length;
+
+      this.totalPages = 0;
+      this.page = 0;
+
+      // resets pagination
+      this.page1 = 1;
+      this.page2 = null;
+      this.page3 = null;
+
+      while (entries > 0) {
+        this.totalPages += 1;
+        entries -= 10
+      }
+
+      if (this.totalPages > 1) {
+        this.page2 = 2
+      }
+      if (this.totalPages > 2) {
+        this.page3 = 3
+      }
+      this.pageEvents = this.events.slice((this.page * 10), (this.page * 10) + 10)
+    },
+    pageChange(pageNo) {
+      this.page = pageNo - 1;
+      if (this.page === 0) {
+        this.page1 = 1;
+        if (this.totalPages > 1) {
+          this.page2 = 2
+        }
+        if (this.totalPages > 2) {
+          this.page3 = 3
+        }
+      } else if (this.page === this.totalPages-1) {
+        if (this.totalPages === 2) {
+          this.page1 = 1;
+          this.page2 = 2
+        } else {
+          this.page1 = this.page-2;
+          this.page2 = this.page-1;
+          this.page3 = this.page;
+        }
+      } else {
+        this.page1 = this.page-1;
+        this.page2 = this.page;
+        this.page3 = this.page+1;
+      }
+      this.getEventImages();
+      this.pageEvents = this.events.slice((this.page * 10), (this.page * 10) + 10)
+    },
+    pageUp() {
+      if (this.page < this.totalPages-1) {
+        this.pageChange(this.page+2)
+      }
+    },
+    pageDown() {
+      if (this.page > 0) {
+        this.pageChange(this.page)
+      }
+    },
+    getEventImages() {
+
+    },
   },
   async mounted() {
     await this.update()
