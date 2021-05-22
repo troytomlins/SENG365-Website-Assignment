@@ -1,7 +1,11 @@
 <template>
   <div class="card my-2">
     <div class="row card-body">
-      <div class="col-2"><img></div> <!-- Hero Image -->
+      <!-- Hero Image -->
+      <div class="col-2">
+        <img :src="imgSrc" class="img-thumbnail" alt="blah" >
+      </div>
+
       <div class="col-10">
         <div class="row mb-3">
           <a class="col-8 nav-link" style="cursor: pointer" @Click="gotoEvent()"><h3 class="col-8 text-start text-dark">{{ title }}</h3></a>
@@ -17,7 +21,11 @@
         </div>
         <div class="row">
           <p class="col-7 text-start">Categories: {{ categoryString }}</p>
-          <p class="col text-end">Organiser: {{ organizerFirstName }} {{ organizerLastName }}</p>
+          <div class="col text-end">
+            <p>Organiser: {{ organizerFirstName }} {{ organizerLastName }}
+              <img class="img-thumbnail" style="width: 50px" src="../../public/defaultUser.png" width="50px" height="50px">
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -25,6 +33,7 @@
 </template>
 
 <script>
+import Api from "@/Api";
 export default {
   name: "Event",
   props: {
@@ -73,7 +82,8 @@ export default {
     return {
       categoryString: "",
       displayDate: "",
-      displayTime: ""
+      displayTime: "",
+      imgSrc: ""
     }
   },
   methods: {
@@ -83,9 +93,6 @@ export default {
         this.categoryString += this.categories[i] + ", "
       }
       this.categoryString = this.categoryString.slice(0, -2)
-    },
-    getImage() {
-
     },
     gotoEvent() {
       this.$router.push({name: 'Event', params: {id: this.eventId}})
@@ -105,11 +112,22 @@ export default {
       } else {
         this.displayTime = hourTime + ":" + minuteTime + AmPm
       }
+    },
+    getImage() {
+      // this.imgSrc = `http://csse-s365docker1.canterbury.ac.nz:4001/api/v1/events/${this.eventId}/image`
+      Api.getEventImage(this.eventId).then((res) => {
+        let image = `data:${res.headers['content-type']};base64,${Buffer.from(String.fromCharCode(...new Uint8Array(res.data)), 'binary')
+            .toString('base64')}`
+        this.imgSrc = image
+        //this.imgSrc = `http://csse-s365docker1.canterbury.ac.nz:4001/api/v1/events/${this.eventId}/image`
+      }).catch(() => {
+
+      })
     }
   },
   mounted() {
-    this.calculateDisplayDate()
     this.getImage()
+    this.calculateDisplayDate()
     this.setCategoryString()
   }
 }

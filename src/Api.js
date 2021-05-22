@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const SERVER_URL = 'http://localhost:4941'
+//const LOCAL = 'http://localhost:4941'
+const SERVER_URL = 'http://csse-s365docker1.canterbury.ac.nz:4246'
 const API_URL = '/api/v1'
 
 const instance = axios.create({
@@ -11,9 +12,27 @@ const instance = axios.create({
 // Endpoints
 export default {
 
-    addNewUser: (user) => instance.post(API_URL + '/users/register', {...user.data}, {withCredentials: true}),
+    // User
+    addNewUser: (user) => instance.post(API_URL + '/users/register', {...user.data}, {}),
 
-    login: (email, password) => instance.post(API_URL + '/users/login', {email, password}, {withCredentials: true}),
+    getUser: (userId, token) => instance.get(API_URL + `/users/${userId}`, {
+        headers: {
+            "X-Authorization": token
+        }
+    }),
+
+    updateUser: (userId, data, token) => instance.patch(API_URL + `/users/${userId}`, data, {
+        headers: {
+            "X-Authorization": token
+        }
+    }),
+
+    // User Images
+    getUserImage: (userId) => instance.get(API_URL + `/users/${userId}/image`, {
+    }),
+
+    // Log In/Out
+    login: (email, password) => instance.post(API_URL + '/users/login', {email, password}, {}),
 
     logOut: (token) => instance.post(API_URL + '/users/logout', {}, {
         headers: {
@@ -21,15 +40,22 @@ export default {
             }
         }),
 
-    searchQC: (query, categoryIds) => instance.get(API_URL + `/events?q=${query}&categoryIds=${categoryIds}`, {withCredentials:true}),
+    // Events
+    search: (searchQuery) => instance.get(API_URL + `/events?${searchQuery}`, {}),
 
-    searchQ: (query) => instance.get(API_URL + `/events?q=${query}`, {withCredentials:true}),
+    getOneEvent: (eventId) => instance.get(API_URL + `/events/${eventId}`, {}),
 
-    searchC: (categoryIds) => instance.get(API_URL + `/events?categoryIds=${categoryIds}`, {withCredentials:true}),
+    addNewEvent: (data, token) => instance.post(API_URL + '/events', data, {
+        headers: {
+            "X-Authorization": token
+        }
+    }),
 
-    getAllEvents: () => instance.get(API_URL + '/events', {withCredentials:true}),
+    // Event Categories
+    getCategories: () => instance.get(API_URL + '/events/categories', {}),
 
-    getOneEvent: (eventId) => instance.get(API_URL + `/events/${eventId}`, {withCredentials:true}),
-
-    getCategories: () => instance.get(API_URL + '/events/categories', {withCredentials:true})
+    // Event Image
+    getEventImage: (eventId) => instance.get(API_URL + `/events/${eventId}/image`, {
+            responseType: 'arraybuffer'
+    })
 }

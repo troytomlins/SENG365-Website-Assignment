@@ -14,7 +14,7 @@
             <div class="col">
               <p><b>When:</b> {{ date }}</p>
             </div>
-            <div class="col">
+            <div class="col" v-if="location">
               <p><b>Where:</b> {{ location }}</p>
             </div>
           </div>
@@ -42,7 +42,7 @@
             <div class="col">
               <button class="btn btn-light" type="button">See Current Attendees</button>
             </div>
-            <div class="col">
+            <div class="col" v-if="url">
               <p>Event URL: {{ url }}</p>
             </div>
           </div>
@@ -92,10 +92,12 @@ export default {
         this.numAttendees = data.attendeeCount;
         this.capacity = data.capacity;
         this.organizer = data.organizerFirstName + " " + data.organizerLastName;
+        this.url = data.url
 
         this.setPrice(data.fee)
         this.setDate(data.date);
         this.setCategories(data.categories);
+        this.setOrganiserPhoto(data.organizerId);
 
       }).catch((e) => {
         console.log(e);
@@ -148,13 +150,16 @@ export default {
 
       }
     },
-    setOrganiserPhoto() { // TODO
+    setOrganiserPhoto(userId) { // TODO
+      Api.getUserImage(userId).then((res) => {
+        console.log(res);
+      }).catch(() => {
 
+      })
     }
   },
   mounted() {
     this.getEvent();
-    this.setOrganiserPhoto();
   }
 }
 </script>

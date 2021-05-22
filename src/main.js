@@ -28,6 +28,16 @@ const routes = [
         name: "Event",
         path: "/events/:id",
         component: () => import('./Views/Event')
+    },
+    {
+        name: "Create Event",
+        path: "/events/create",
+        component: () => import('./Views/CreateEvent')
+    },
+    {
+        name: "Profile",
+        path: "/profile",
+        component: () => import('./Views/Profile')
     }
 ];
 

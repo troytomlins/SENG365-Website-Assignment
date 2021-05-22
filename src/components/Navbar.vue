@@ -12,7 +12,7 @@
               <a class="nav-link" @click="navigateTo('Home')" style="cursor:pointer;">Home</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Page2</a>
+              <a class="nav-link" @click="navigateTo('Events')" style="cursor:pointer;">Events</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#">Page3</a>
@@ -22,8 +22,18 @@
             <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" v-model="searchQuery">
             <button class="btn btn-outline-success" type="submit" @click="search($event)">Search</button>
           </form>
-          <div class="mx-2 col" v-if="loggedIn">
-            <button class="btn btn-outline-primary float-end" @click="logOut()">Log out</button>
+          <div class="mx-2 col row" v-if="loggedIn">
+            <div class="mx-2 col-8">
+              <ul class="navbar-nav">
+                <li class="nav-item ms-auto px-2">
+                  <a class="nav-link" @click="navigateTo('Create Event')" style="cursor: pointer">Create Event</a>
+                </li>
+                <li class="nav-item px-2">
+                  <a class="nav-link" @click="navigateTo('Profile')" style="cursor: pointer">Profile</a>
+                </li>
+              </ul>
+            </div>
+            <button class="btn btn-outline-primary float-end col" @click="logOut()">Log out</button>
           </div>
           <div v-else class="mx-2 col">
             <button class="btn btn-outline-primary float-end" @click="navigateTo('Login')">Log in/Register</button>

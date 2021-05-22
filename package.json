@@ -16,10 +16,12 @@
     "date-fns": "^2.21.3",
     "jquery": "^3.6.0",
     "js-cookie": "^2.2.1",
+    "mz": "^2.7.0",
     "popper.js": "^1.16.1",
     "vue": "^3.0.11",
     "vue-router": "^4.0.8",
-    "vuejs-logger": "^1.5.5"
+    "vuejs-logger": "^1.5.5",
+    "vuetify": "^2.5.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
