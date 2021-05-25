@@ -2,20 +2,17 @@
   <div id="navbar">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <div class="container-fluid">
-        <a class="navbar-brand" href="#">AppName</a>
+        <a class="navbar-brand" @click="navigateTo('Home')" style="cursor:pointer;">AppName</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav mb-2 mb-lg-0 col">
             <li class="nav-item">
-              <a class="nav-link" @click="navigateTo('Home')" style="cursor:pointer;">Home</a>
-            </li>
-            <li class="nav-item">
               <a class="nav-link" @click="navigateTo('Events')" style="cursor:pointer;">Events</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Page3</a>
+            <li class="nav-item" v-if="loggedIn">
+              <a class="nav-link" @click="navigateTo('Create Event')" style="cursor: pointer">Create Event</a>
             </li>
           </ul>
           <form class="d-flex col">
@@ -26,7 +23,7 @@
             <div class="mx-2 col-8">
               <ul class="navbar-nav">
                 <li class="nav-item ms-auto px-2">
-                  <a class="nav-link" @click="navigateTo('Create Event')" style="cursor: pointer">Create Event</a>
+                  <a class="nav-link" @click="navigateTo('My Events')" style="cursor: pointer">My Events</a>
                 </li>
                 <li class="nav-item px-2">
                   <a class="nav-link" @click="navigateTo('Profile')" style="cursor: pointer">Profile</a>

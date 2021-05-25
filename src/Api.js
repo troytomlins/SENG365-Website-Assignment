@@ -43,9 +43,51 @@ export default {
     // Events
     search: (searchQuery) => instance.get(API_URL + `/events?${searchQuery}`, {}),
 
-    getOneEvent: (eventId) => instance.get(API_URL + `/events/${eventId}`, {}),
+    getOneEvent: (eventId, token) => instance.get(API_URL + `/events/${eventId}`, {
+        headers: {
+            "X-Authorization": token
+        }
+    }),
 
     addNewEvent: (data, token) => instance.post(API_URL + '/events', data, {
+        headers: {
+            "X-Authorization": token
+        }
+    }),
+
+    deleteEvent: (eventId, token) => instance.delete(API_URL + `/events/${eventId}`, {
+        headers: {
+            "X-Authorization": token
+        }
+    }),
+
+    editEvent: (data, eventId, token) => instance.patch(API_URL + `/events/${eventId}`, data,{
+        headers: {
+            "X-Authorization": token
+        }
+    }),
+
+
+    getAttendees: (eventId, token) => instance.get(API_URL + `/events/${eventId}/attendees`, {
+        headers: {
+            "X-Authorization": token
+        }
+    }),
+
+    changeAttendance: (userId, eventId, status, token) => instance.patch(API_URL + `/events/${eventId}/attendees/${userId}`,
+        {status}, {
+            headers: {
+                "X-Authorization": token
+            }
+        }),
+
+    joinEvent: (eventId, token) => instance.post(API_URL + `/events/${eventId}/attendees`, {}, {
+        headers: {
+            "X-Authorization": token
+        }
+    }),
+
+    leaveEvent: (eventId, token) => instance.delete(API_URL + `/events/${eventId}/attendees`, {
         headers: {
             "X-Authorization": token
         }

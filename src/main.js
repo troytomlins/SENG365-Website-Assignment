@@ -35,9 +35,19 @@ const routes = [
         component: () => import('./Views/CreateEvent')
     },
     {
+        name: "Edit Event",
+        path: "/events/:id/edit",
+        component: () => import('./Views/EditEvent')
+    },
+    {
         name: "Profile",
         path: "/profile",
         component: () => import('./Views/Profile')
+    },
+    {
+        name: "My Events",
+        path: "/myevents",
+        component: () => import('./Views/MyEvents')
     }
 ];
 
