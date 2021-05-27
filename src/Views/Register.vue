@@ -52,7 +52,7 @@
         <!-- Upload image -->
         <div class="row">
           <div class="col">
-            <label for="eventImage">Upload Event Image:</label>
+            <label for="eventImage">Upload Image:</label>
             <input class="m-2" id="eventImage" type="file" accept="image/jpeg, image/png, image/gif" @change="filePicked($event)"
                    :class="toggleInvalidClass(imageError)">
             <div class="invalid-feedback">
