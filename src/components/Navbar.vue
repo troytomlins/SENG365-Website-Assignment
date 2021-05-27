@@ -2,7 +2,7 @@
   <div id="navbar">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <div class="container-fluid">
-        <a class="navbar-brand" @click="navigateTo('Home')" style="cursor:pointer;">AppName</a>
+        <a class="navbar-brand" @click="navigateTo('Events')" style="cursor:pointer;">AppName</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -60,6 +60,7 @@ export default {
       Cookies.remove('token')
       Cookies.remove('userId')
       this.loggedIn = false
+      this.$parent.loggedOut()
     },
     navigateTo(page) {
       this.$router.push({name: page});

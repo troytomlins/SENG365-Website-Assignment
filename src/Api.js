@@ -1,11 +1,11 @@
 import axios from 'axios'
 
-//const LOCAL = 'http://localhost:4941'
-const SERVER_URL = 'http://csse-s365docker1.canterbury.ac.nz:4246'
+const LOCAL = 'http://localhost:4941'
+//const SERVER_URL = 'http://csse-s365docker1.canterbury.ac.nz:4246'
 const API_URL = '/api/v1'
 
 const instance = axios.create({
-    baseURL: SERVER_URL,
+    baseURL: LOCAL,
     timeout: 3000
 });
 
@@ -28,7 +28,21 @@ export default {
     }),
 
     // User Images
+    setUserImage: (userId, image, imageType, token) => instance.put(API_URL + `/users/${userId}/image`, image, {
+        headers: {
+            "X-Authorization": token,
+            "Content-Type": imageType
+        },
+    }),
+
     getUserImage: (userId) => instance.get(API_URL + `/users/${userId}/image`, {
+        responseType: 'arraybuffer'
+    }),
+
+    deleteUserImage: (userId, token) => instance.delete(API_URL + `/users/${userId}/image`, {
+        headers: {
+            "X-Authorization": token
+        }
     }),
 
     // Log In/Out
@@ -97,6 +111,13 @@ export default {
     getCategories: () => instance.get(API_URL + '/events/categories', {}),
 
     // Event Image
+    setEventImage: (eventId, image, imageType, token) => instance.put(API_URL + `/events/${eventId}/image`, image, {
+        headers: {
+            "X-Authorization": token,
+            "Content-Type": imageType
+        },
+
+    }),
     getEventImage: (eventId) => instance.get(API_URL + `/events/${eventId}/image`, {
             responseType: 'arraybuffer'
     })

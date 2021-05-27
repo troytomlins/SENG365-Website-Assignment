@@ -16,16 +16,13 @@
             <p>Current No. of Attendees: {{ numAcceptedAttendees }}</p>
           </div>
           <div class="col">
-            <p>Capacity: {{ capacity }}</p>
+            <p v-if="capacity">Capacity: {{ capacity }}</p>
           </div>
         </div>
         <div class="row">
           <p class="col-7 text-start">Categories: {{ categoryString }}</p>
-          <div class="col text-end">
-            <p>Organiser: {{ organizerFirstName }} {{ organizerLastName }}
-              <img class="img-thumbnail" style="width: 50px" src="../../public/defaultUser.png" width="50px" height="50px">
-            </p>
-          </div>
+          <p class="col text-end">Organiser: {{ organizerFirstName }} {{ organizerLastName }}</p>
+          <img class="col-1" :src="orgImg">
         </div>
       </div>
     </div>
@@ -76,6 +73,10 @@ export default {
       type: String,
       default: "LAST",
       required: false
+    },
+    organizerId: {
+      type: Number,
+      required: true
     }
   },
   data() {
@@ -83,7 +84,8 @@ export default {
       categoryString: "",
       displayDate: "",
       displayTime: "",
-      imgSrc: ""
+      imgSrc:  '/default-event-photo.png',
+      orgImg: '/defaultUser.png'
     }
   },
   methods: {
@@ -114,14 +116,28 @@ export default {
       }
     },
     getImage() {
-      // this.imgSrc = `http://csse-s365docker1.canterbury.ac.nz:4001/api/v1/events/${this.eventId}/image`
       Api.getEventImage(this.eventId).then((res) => {
-        let image = `data:${res.headers['content-type']};base64,${Buffer.from(String.fromCharCode(...new Uint8Array(res.data)), 'binary')
-            .toString('base64')}`
+        let image;
+        image = `data:${res.headers['content-type']};base64,${Buffer.from(res.data, 'binary').toString('base64')}`
         this.imgSrc = image
-        //this.imgSrc = `http://csse-s365docker1.canterbury.ac.nz:4001/api/v1/events/${this.eventId}/image`
-      }).catch(() => {
-
+      }).catch((e) => {
+        this.imgSrc = '/default-event-photo.png'
+        console.log(e)
+      })
+      Api.getUserImage(this.organizerId).then((res) => {
+        let image;
+        image = `data:${res.headers['content-type']};base64,${Buffer.from(res.data, 'binary').toString('base64')}`
+        this.orgImg = image
+      }).catch((e) => {
+        if (e.request) {
+          if (e.request.status === 404) {
+            this.orgImg = '/defaultUser.png'
+          } else {
+            console.log(e.request.statusMessage)
+          }
+        } else {
+          console.log(e)
+        }
       })
     }
   },

@@ -15,13 +15,8 @@ const routes = [
         component: () => import('./Views/Register')
     },
     {
-        name: "Home",
-        path: "/",
-        component: () => import('./Views/Home')
-    },
-    {
         name: "Events",
-        path: "/events",
+        path: "/",
         component: () => import('./Views/Events')
     },
     {
@@ -48,6 +43,11 @@ const routes = [
         name: "My Events",
         path: "/myevents",
         component: () => import('./Views/MyEvents')
+    },
+    {
+        name: "Unauthorized",
+        path: '/unauthorized',
+        component: () => import('./Views/Unauthorized')
     }
 ];
 

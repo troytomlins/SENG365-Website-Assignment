@@ -48,6 +48,20 @@
             {{ confirmPasswordError }}
           </div>
         </div>
+
+        <!-- Upload image -->
+        <div class="row">
+          <div class="col">
+            <label for="eventImage">Upload Event Image:</label>
+            <input class="m-2" id="eventImage" type="file" accept="image/jpeg, image/png, image/gif" @change="filePicked($event)"
+                   :class="toggleInvalidClass(imageError)">
+            <div class="invalid-feedback">
+              {{ imageError }}
+            </div>
+          </div>
+          <img v-if="image" class="col-2" :src="image">
+        </div>
+
         <div class="row" v-if="registerError">
           <div class="alert alert-danger my-4">
             {{ registerError }}
@@ -87,10 +101,31 @@ export default {
       confirmPassword: "",
       confirmPasswordError: "",
 
-      registerError: ""
+      registerError: "",
+
+      image: null,
+      imageError: "",
+      imageType: ""
     }
   },
   methods: {
+    async filePicked(event) {
+      const files = event.target.files
+      this.imageType = files[0].type
+      if (this.imageType !== 'image/jpeg' && this.imageType !== 'image/png' && this.imageType !== 'image/gif') {
+        this.imageError = "File must be of type jpeg, png or gif"
+        return
+      }
+      this.imageError = ""
+
+      const fileReader = new FileReader()
+
+      fileReader.onload = (e) => {
+        this.image = e.target.result;
+      }
+      await fileReader.readAsDataURL(files[0])
+
+    },
     navigateTo(page) {
       this.$router.push({name: page})
     },
@@ -117,19 +152,20 @@ export default {
       }
       return errorMessage;
     },
-    logInUser() {
-      Api.login(this.email, this.password).then((res) => {
+    async logInUser() {
+      await Api.login(this.email, this.password).then((res) => {
         const data = res.data;
         Cookies.set("userId", data.userId);
         Cookies.set("token", data.token);
-        this.$router.push({name: 'Home'})
-      }).catch(() => {
-        this.$router.push({name: 'Login'});
-      });
+      })
     },
     addNewUser(e) {
       e.preventDefault(); // Stops page from reloading
       let addInvalid = false;
+
+      if (this.imageError) {
+        addInvalid = true
+      }
 
       // First name error checking
       this.firstName.trim()
@@ -209,7 +245,11 @@ export default {
 
 
 
-      Api.addNewUser(user).then(() => {this.logInUser()}).catch((e) => {
+      Api.addNewUser(user).then(async (res) => {
+        await this.logInUser()
+        await this.setImage(res.data.userId)
+        await this.$router.push({name: 'Profile'})
+      }).catch((e) => {
         if (e.response.status === 400) {
           if (e.response.statusText === "Bad Request: email already in use") {
             this.registerError = "Email already in use"
@@ -221,6 +261,26 @@ export default {
         }
       })
 
+    },
+    async setImage(id) {
+      const token = Cookies.get('token')
+
+      const base = ';base64,'
+      const base64Index = this.image.indexOf(base) + base.length
+      const base64 = this.image.substring(base64Index)
+      const raw = window.atob(base64)
+      const rawLength = raw.length
+      let image = new Uint8Array(new ArrayBuffer(rawLength))
+
+      for(let i = 0; i < rawLength; i++) {
+        image[i] = raw.charCodeAt(i);
+      }
+
+      await Api.setUserImage(id, image, this.imageType, token).then((res) => {
+        console.log(res.statusText)
+      }).catch((e) => {
+        console.log(e)
+      })
     }
   }
 }

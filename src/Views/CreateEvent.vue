@@ -92,10 +92,13 @@
             <!-- Categories -->
             <label class="form-label m-2" for="categories">Categories:</label>
             <div class="col">
-              <select class="form-select" id="categories" v-model="selectedCat">
+              <select class="form-select" id="categories" v-model="selectedCat" :class="toggleInvalidClass(categoriesError)">
                 <option disabled selected>Select Categories</option>
                 <option v-for="category in categories" v-bind:key="category.id" v-bind:value="{ id: category.id, name: category.name }">{{category.name}}</option>
               </select>
+              <div class="invalid-feedback">
+                {{ categoriesError }}
+              </div>
             </div>
             <div class="col-4">
               <button type="button" class="btn btn-primary" @click="addCategory()">Add Category</button>
@@ -127,11 +130,25 @@
           </div>
         </div>
 
+        <!-- Upload image -->
+        <div class="row">
+          <div class="col">
+            <label for="eventImage">Upload Event Image:</label>
+            <input class="m-2" id="eventImage" type="file" accept="image/jpeg, image/png, image/gif" @change="filePicked($event)"
+                   :class="toggleInvalidClass(imageError)">
+            <div class="invalid-feedback">
+              {{ imageError }}
+            </div>
+          </div>
+          <img v-if="image" class="col-2" :src="image">
+        </div>
+
         <div class="row m-2" v-if="createError">
           <div class="alert alert-danger my-4">
             {{ createError }}
           </div>
         </div>
+
         <button type="button" class="btn btn-primary mx-2 my-2" @click="addNewEvent($event)">Submit</button>
       </form>
     </div>
@@ -177,14 +194,36 @@ export default {
       feeError: "",
 
       categories: [],
+      categoriesError: "",
 
       createError: "",
+
+      image: null,
+      imageError: "",
+      imageType: "",
 
       selectedCat: "Select Categories",
       selectedCategories: []
     }
   },
   methods: {
+    async filePicked(event) {
+      const files = event.target.files
+      this.imageType = files[0].type
+      if (this.imageType !== 'image/jpeg' && this.imageType !== 'image/png' && this.imageType !== 'image/gif') {
+        this.imageError = "File must be of type jpeg, png or gif"
+        return
+      }
+      this.imageError = ""
+
+      const fileReader = new FileReader()
+
+      fileReader.onload = (e) => {
+        this.image = e.target.result;
+      }
+      await fileReader.readAsDataURL(files[0])
+
+    },
     getCategories() {
       Api.getCategories().then((res) => {
         this.categories = res.data
@@ -233,6 +272,14 @@ export default {
       let isValid = true;
       let data = {}
 
+      // Image error check
+      if(!this.image) {
+        this.imageError = "Event must have a image"
+      }
+      if (this.imageError) {
+        isValid = false
+      }
+
       // Title error check
       this.titleError = this.getErrorMessage(
           this.config.title,
@@ -266,6 +313,7 @@ export default {
       // Selected Categories error checking
       if (this.selectedCategories.length === 0) {
         isValid = false
+        this.categoriesError = "Must add a category"
       } else {
         let cats = []
         for (let i=0; i < this.selectedCategories.length; i++) {
@@ -373,13 +421,40 @@ export default {
       const token = Cookies.get('token');
       Api.addNewEvent(data, token).then((res) => {
         let eventId = res.data.eventId
+        this.addEventPhoto(eventId)
         this.$router.push({name: 'Event', params: {id: eventId}})
       }).catch((e) => {
         console.log(e)
       })
+    },
+    addEventPhoto(eventId) {
+      const token = Cookies.get('token')
+
+      const base = ';base64,'
+      const base64Index = this.image.indexOf(base) + base.length
+      const base64 = this.image.substring(base64Index)
+      const raw = window.atob(base64)
+      const rawLength = raw.length
+      let image = new Uint8Array(new ArrayBuffer(rawLength))
+
+      for(let i = 0; i < rawLength; i++) {
+        image[i] = raw.charCodeAt(i);
+      }
+
+      console.log(image)
+
+      Api.setEventImage(eventId, image, this.imageType, token).catch((e) => {
+        console.log(e)
+      })
+    },
+    loggedOut() {
+      this.$router.push({name: 'Events'})
     }
   },
   mounted() {
+    if (!Cookies.get('userId') || !Cookies.get('token')) {
+      this.$router.push({name: 'Unauthorized'})
+    }
     this.getCategories()
   }
 }

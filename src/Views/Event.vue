@@ -3,7 +3,8 @@
     <Navbar/>
 
     <!-- Attendee Modal -->
-    <Attendees v-bind:attendees="attendees" v-bind:is-organizer="isOrganizer" v-bind:eventId="eventId"/>
+    <Attendees v-bind:attendees="attendees" v-bind:is-organizer="isOrganizer" v-bind:eventId="eventId"
+               v-bind:organizer-name="organizer" v-bind:org-img="orgImgSrc"/>
 
     <!-- Delete Event Modal -->
     <div class="modal fade mt-5" id="confirmDelete" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
@@ -43,6 +44,31 @@
       </div>
     </div>
 
+    <!-- Change Profile Image Modal -->
+    <div class="modal fade mt-5" id="imageChange" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+         aria-labelledby="imageChangeTitle" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 id="imageChangeTitle">Change Event Hero Image</h4>
+          </div>
+          <div class="modal-body">
+            <input class="mb-2" id="profileImage" type="file" accept="image/jpeg, image/png, image/gif" @change="filePicked($event)"
+                   :class="toggleInvalidClass(imageError)">
+            <div class="invalid-feedback">
+              {{ imageError }}
+            </div>
+            <img v-if="newImage" class="img-fluid" :src="newImage">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-primary col mx-4" data-bs-dismiss="modal" @click="resetImage()">Cancel</button>
+            <button type="button" class="btn btn-success col mx-4" data-bs-dismiss="modal" @click="updateImage()">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Page -->
     <div class="container shadow my-5 mx-auto text-start">
       <div class="row py-4">
         <h1 class="col text-center">{{ title }}</h1>
@@ -51,8 +77,11 @@
         </div>
       </div>
       <div class="row px-2">
-        <div class="col-4">
-          <img>
+        <div class="col-4 text-center">
+          <div class="row">
+            <img class="mx-auto" style="max-height: 200px; width: auto" :src="imgSrc">
+          </div>
+          <button v-if="isOrganizer" class="btn btn-primary m-2" data-bs-toggle="modal" data-bs-target="#imageChange">Edit Image</button>
         </div>
         <div class="col-8">
 
@@ -80,11 +109,14 @@
           </div>
 
           <div class="row">
-            <div class="col" v-if="categoriesDisplay">
+            <div class="col-6 py-4" v-if="categoriesDisplay">
               <p>Categories: {{ categoriesDisplay }}</p>
             </div>
-            <div class="col">
-              <p>Organised by: {{ organizer }}</p>
+            <div class="col py-4">
+              <p class="text-end">Organised by: {{ organizer }}</p>
+            </div>
+            <div class="col-2">
+              <img class="img-thumbnail" :src="orgImgSrc">
             </div>
           </div>
 
@@ -117,12 +149,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Similar events -->
     <div class="container shadow my-5 mx-auto text-start" v-if="otherEvents.length > 0">
       Similar Events:
       <div class="row p-2">
-        <div class="col-3 card px-3" v-for="event in otherEvents" v-bind:key="event.eventId" @click="gotoEvent(event.eventId)">
-          <img class="row">
-          <p class="row m-0">{{ event.title }}</p>
+        <div class="col-3 card px-3" style="cursor: pointer" v-for="event in otherEvents" v-bind:key="event.eventId" @click="gotoEvent(event.eventId)">
+          <img class="mx-auto" style="max-height: 150px; max-width: inherit" :src="event.img">
+          <hr>
+          <div class="card-title align-text-bottom">
+            {{ event.title }}
+          </div>
         </div>
       </div>
     </div>
@@ -142,6 +179,10 @@ export default {
     return {
       loginModal: null,
       eventId: null,
+
+      // Images
+      imgSrc: '/default-event-photo.png',
+      orgImgSrc: '/defaultUser.png',
 
       fee: null,
 
@@ -167,10 +208,68 @@ export default {
 
       categories: [],
       attendees: [],
-      otherEvents: []
+      otherEvents: [],
+
+      // Change Image
+      newImageModal: null,
+      newImage: null,
+      imageError: "",
+      imageType: ""
     }
   },
   methods: {
+    resetImage() {
+      this.newImage = null
+      document.getElementById('profileImage').value = null
+      this.imageError = ""
+    },
+    async updateImage() {
+      const token = Cookies.get('token')
+
+      const base = ';base64,'
+      const base64Index = this.newImage.indexOf(base) + base.length
+      const base64 = this.newImage.substring(base64Index)
+      const raw = window.atob(base64)
+      const rawLength = raw.length
+      let image = new Uint8Array(new ArrayBuffer(rawLength))
+
+      for(let i = 0; i < rawLength; i++) {
+        image[i] = raw.charCodeAt(i);
+      }
+
+      await Api.setEventImage(this.eventId, image, this.imageType, token).then(() => {
+        this.getImage()
+        this.resetImage()
+      }).catch((e) => {
+        console.log(e)
+      })
+    },
+    async filePicked(event) {
+      const files = event.target.files
+      this.imageType = files[0].type
+      if (this.imageType !== 'image/jpeg' && this.imageType !== 'image/png' && this.imageType !== 'image/gif') {
+        this.imageError = "File must be of type jpeg, png or gif"
+        this.newImage = null
+        return
+      }
+      this.imageError = ""
+
+      const fileReader = new FileReader()
+
+      fileReader.onload = (e) => {
+        this.newImage = e.target.result;
+      }
+      await fileReader.readAsDataURL(files[0])
+
+    },
+    toggleInvalidClass(errorMessage) {
+      let classList = ['form-control']
+      if (errorMessage) {
+        classList.push('is-invalid')
+      }
+      return classList
+
+    },
     async getEvent() {
       this.eventId = this.$route.params.id
       const token = Cookies.get('token')
@@ -206,8 +305,8 @@ export default {
       await Api.getAttendees(this.eventId, token).then((res) => {
         this.attendees = res.data
 
-        this.currentAttendee = false
         // Checks if user is currently attending event
+        this.currentAttendee = false
         const userId = parseInt(Cookies.get('userId'))
         for (let i=0;i < this.attendees.length; i++) {
           if (userId === this.attendees[i].attendeeId) {
@@ -217,8 +316,20 @@ export default {
             this.currentAttendee = true
           }
         }
+        this.getAttendeesImages()
       })
       this.checkIfJoinLeave()
+    },
+    getAttendeesImages() {
+      for (let i=0; i < this.attendees.length; i++) {
+        Api.getUserImage(this.attendees[i].attendeeId).then((res) => {
+          let image = `data:${res.headers['content-type']};base64,`
+          image += Buffer.from(res.data, 'binary').toString('base64')
+          this.attendees[i].img = image
+        }).catch(() => {
+          this.attendees[i].img = '/defaultUser.png'
+        })
+      }
     },
     joinEvent() {
       const token = Cookies.get('token')
@@ -290,11 +401,20 @@ export default {
 
       }
     },
-    setOrganiserPhoto(userId) { // TODO
+    setOrganiserPhoto(userId) {
       Api.getUserImage(userId).then((res) => {
-        console.log(res);
+        let image = `data:${res.headers['content-type']};base64,${Buffer.from(res.data, 'binary').toString('base64')}`
+        this.orgImgSrc = image
       }).catch(() => {
-
+        this.orgImgSrc = '/defaultUser.png'
+      })
+    },
+    getImage() {
+      Api.getEventImage(this.eventId).then((res) => {
+        let image = `data:${res.headers['content-type']};base64,${Buffer.from(res.data, 'binary').toString('base64')}`
+        this.imgSrc = image
+      }).catch(() => {
+        this.imgSrc = '/default-event-photo.png'
       })
     },
     checkIfJoinLeave() {
@@ -303,7 +423,15 @@ export default {
       }
       this.canJoin = false
       this.canLeave = false
-      if(this.inFuture && !this.isOrganizer && !this.currentAttendee && this.numAttendees < this.capacity) {
+
+      let atCapacity = true
+      if (!this.capacity) {
+        atCapacity = false
+      } else if (this.numAttendees < this.capacity) {
+        atCapacity = false
+      }
+
+      if(this.inFuture && !this.isOrganizer && !this.currentAttendee && !atCapacity) {
         this.canJoin = true
       }
       // Checks user is not organizer && that user is logged in && that date of event is in future
@@ -323,14 +451,13 @@ export default {
     gotoLogin() {
       this.$router.push({name: 'Login'})
     },
-    getOtherEvents() {
+    async getOtherEvents() {
       let q = ""
       for (let i=0;i < this.categories.length; i++) {
         q += "categoryIds=" + this.categories[i].id + "&"
       }
       q += "count=5"
-      console.log(q)
-      Api.search(q).then((res) => {
+      await Api.search(q).then((res) => {
         const data = res.data
         this.otherEvents = []
         for (let i=0; i < data.length; i++) {
@@ -342,19 +469,33 @@ export default {
           }
         }
       })
+
+      for (let i=0; i < this.otherEvents.length; i++) {
+        await Api.getEventImage(this.otherEvents[i].eventId).then((res) => {
+          let image = `data:${res.headers['content-type']};base64,${Buffer.from(res.data, 'binary').toString('base64')}`
+          this.otherEvents[i].img = image
+        }).catch(() => {
+          this.otherEvents[i].img = '/default-event-photo.png'
+        })
+      }
+
     },
     async gotoEvent(eventId) {
       await this.$router.push({path: `/events/${eventId}`})
-      await this.getEvent()
-      await this.getAttendees();
-      this.getOtherEvents()
+      await this.$router.go()
+    },
+    loggedOut() {
+      this.isOrganizer = false
+      this.checkIfJoinLeave()
     }
   },
   async mounted() {
     await this.getEvent();
+    await this.getImage();
     await this.getAttendees();
     this.loginModal = new Modal(document.getElementById("loginPopup"));
-    this.getOtherEvents()
+    this.newImageModal = new Modal(document.getElementById('imageChange'))
+    await this.getOtherEvents()
   }
 }
 </script>

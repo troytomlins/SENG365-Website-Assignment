@@ -4,7 +4,7 @@
       <form id="login-form" class="col-8 mx-auto my-2">
         <div class="row">
         <div class="col-1">
-          <button type="button" class="btn btn-primary my-1 float-start" @click="navigateTo('Home')">Back</button>
+          <button type="button" class="btn btn-primary my-1 float-start" @click="navigateTo('Events')">Back</button>
         </div>
         <div class="col-10">
         <h1>Login</h1>
@@ -40,7 +40,7 @@
             <button type="button" class="btn btn-outline-primary mx-5" @click="navigateTo('Register')">Register</button>
           </div>
           <div class="col">
-            <button type="button" class="btn btn-primary mx-5" @click="login()">Login</button>
+            <button type="submit" class="btn btn-primary mx-5" @click="login($event)">Login</button>
           </div>
         </div>
         <br>
@@ -76,7 +76,8 @@ export default {
     navigateTo(page) {
       this.$router.push({name: page});
     },
-    login() {
+    login(event) {
+      event.preventDefault()
       let invalidLogin = false;
 
       this.email.trim();
@@ -103,12 +104,17 @@ export default {
         const data = res.data;
         Cookies.set("userId", data.userId).httpOnly;
         Cookies.set("token", data.token).httpOnly;
-        this.$router.push({name: 'Home'})
+        this.$router.push({name: 'Events'})
       }).catch((error) => {
-        if (error.response.status === 400) {
-          this.loginError = "Email/Password is incorrect"
-        } else if (error.status === 500) {
+        if (error.response) {
+          if (error.response.status === 400) {
+            this.loginError = "Email/Password is incorrect"
+          } else if (error.status === 500) {
+            this.loginError = "Timeout"
+          }
+        } else {
           console.log(error);
+          this.loginError = ""
         }
       });
 

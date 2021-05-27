@@ -338,21 +338,23 @@ export default {
       }
 
       // Capacity error checking
-      this.capacityError = this.getErrorMessage(
-          this.config.capacity,
-          this.capacity,
-          this.config.capacity.minLength,
-          this.config.capacity.maxLength,
-          this.config.capacity.regexMessage,
-          this.config.capacity.regex
-      )
-      if (this.capacity < this.numAttendees) {
-        this.capacityError = "Current number of attendees is greater than new capacity"
-      }
-      if (this.capacityError) {
-        isValid = false
-      } else {
-        data['capacity'] = parseInt(this.capacity)
+      if (this.capacity) {
+        this.capacityError = this.getErrorMessage(
+            this.config.capacity,
+            this.capacity,
+            this.config.capacity.minLength,
+            this.config.capacity.maxLength,
+            this.config.capacity.regexMessage,
+            this.config.capacity.regex
+        )
+        if (this.capacity < this.numAttendees) {
+          this.capacityError = "Current number of attendees is greater than new capacity"
+        }
+        if (this.capacityError) {
+          isValid = false
+        } else {
+          data['capacity'] = parseInt(this.capacity)
+        }
       }
 
       // Attendance Control
@@ -402,9 +404,16 @@ export default {
           }
         }
       })
+    },
+    loggedOut() {
+      const eventId = this.$route.params.id
+      this.$router.push({name: 'Event', params: {id: eventId}})
     }
   },
   mounted() {
+    if (!Cookies.get('userId') || !Cookies.get('token')) {
+      this.$router.push({name: 'Unauthorized'})
+    }
     this.getCategories()
     this.getCurrentData()
   }

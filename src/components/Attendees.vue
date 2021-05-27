@@ -2,7 +2,7 @@
   <!-- Modal -->
   <div class="modal fade" id="attendeesPopup" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
        aria-labelledby="attendeePopupTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
 
         <!--title-->
@@ -12,20 +12,38 @@
 
         <!--modal body-->
         <div class="modal-body form">
-          <div v-if="attendees.length === 0">
-            No Attendees Found
-          </div>
-          <div v-else>
+          <div>
+            <!-- Organizer -->
+            <div class="row">
+              <div class="col-3">
+                Organizer
+              </div>
+              <img class="col-2" :src="orgImg">
+              <div class="col text-start">
+                {{ organizerName }}
+              </div>
+
+            </div>
+            <!-- Attendees -->
             <div class="row" v-for="attendee in attendees" v-bind:key="attendee.id">
-              <div class="col-2">
-                {{ attendee.status }}
+              <hr class="my-1">
+              <div class="col-3">
+                Attendee
               </div>
-              <div class="col">
-                {{ attendee.firstName }} {{ attendee.lastName}}
+              <img class="col-2" :src="attendee.img">
+              <div class="col text-start" v-if="attendee.status !== 'accepted'">
+                {{ attendee.firstName }} {{ attendee.lastName }} ({{ attendee.status }})
               </div>
-              <div class="col-4" v-if="isOrganizer && attendee.status === 'pending'">
-                <button class="btn btn-success py-0 px-1" @click="changeStatus(attendee.attendeeId, 'accepted')">Approve</button>
-                <button class="btn btn-danger py-0 px-1" @click="changeStatus(attendee.attendeeId, 'rejected')">Reject</button>
+              <div class="col text-start" v-else>
+                {{ attendee.firstName }} {{ attendee.lastName }}
+              </div>
+              <div class="col-2" v-if="isOrganizer && attendee.status === 'pending'">
+                <div class="row">
+                  <button class="btn btn-success py-0 px-1 mb-1" @click="changeStatus(attendee.attendeeId, 'accepted')">Approve</button>
+                </div>
+                <div class="row">
+                  <button class="btn btn-danger py-0 px-1" @click="changeStatus(attendee.attendeeId, 'rejected')">Reject</button>
+                </div>
               </div>
             </div>
           </div>
@@ -55,7 +73,13 @@ export default {
       type: Boolean,
       default: false
     },
+    organizerName: {
+      type: String
+    },
     eventId: {
+      type: String
+    },
+    orgImg: {
       type: String
     }
   },

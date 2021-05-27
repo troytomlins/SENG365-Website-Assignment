@@ -35,21 +35,20 @@
       <div class="shadow align-content-center my-4">
         <h2 class="p-5" v-if="noEvents">No events found!</h2>
         <event
-            v-for="event in pageEvents" :id="event.index" v-bind:key="event.index"
+            v-for="event in pageEvents" :id="event.index" v-bind:key="event.eventId"
             v-bind:eventId="event.eventId" v-bind:title="event.title" v-bind:capacity="event.capacity"
             v-bind:categories="event.categories" v-bind:date="event.date"
             v-bind:numAcceptedAttendees="event.numAcceptedAttendees"
             v-bind:organizerFirstName="event.organizerFirstName"
             v-bind:organizerLastName="event.organizerLastName"
+            v-bind:organizerId="event.organizerId"
         />
       </div>
       <nav aria-label="Page navigation example">
         <ul class="pagination">
-          <li class="page-item" v-if="page2"><a class="page-link" style="cursor:pointer;" @click="pageDown()">Previous</a></li>
-          <li class="page-item"><a class="page-link" style="cursor:pointer;" @click="pageChange(page1-1)">{{ page1 }}</a></li>
-          <li class="page-item" v-if="page2"><a class="page-link" style="cursor:pointer;" @click="pageChange(page2-1)">{{ page2 }}</a></li>
-          <li class="page-item" v-if="page3"><a class="page-link" style="cursor:pointer;" @click="pageChange(page3-1)">{{ page3 }}</a></li>
-          <li class="page-item" v-if="page2"><a class="page-link" style="cursor:pointer;" @click="pageUp()">Next</a></li>
+          <li class="page-item" v-if="page !== 0"><a class="page-link" style="cursor:pointer;" @click="pageDown()">Previous</a></li>
+          <li class="page-item active"><a class="page-link" href="#">{{ page+1 }}</a></li>
+          <li class="page-item" v-if="!finalPage"><a class="page-link" style="cursor:pointer;" @click="pageUp()">Next</a></li>
         </ul>
       </nav>
     </div>
@@ -81,10 +80,8 @@ export default {
       sortBy: "DATE_ASC",
 
       page: 0,
-      totalPages: 0,
-      page1: null,
-      page2: null,
-      page3: null
+      firstPage: true,
+      finalPage: false
     }
   },
   methods: {
@@ -118,9 +115,9 @@ export default {
         console.log(e)
       })
     },
-    setCategories(startIndex) {
+    setCategories() {
       // for each new event...
-      for(let i=startIndex; i < this.events.length; i++) {
+      for(let i=0; i < this.events.length; i++) {
         // for each category in event...
         for(let j=0; j < this.events[i].categories.length; j++) {
           // find each categories name
@@ -136,105 +133,63 @@ export default {
     async update() {
       this.noEvents = false
       this.events = [];
-      this.pageEvents = [];
       this.page = 0;
-      await this.getCategories()
+
       await this.search()
-     // await this.getEventImages(0)
-      this.setCategories(0)
-      this.calculateTotalPages()
-      this.setPages();
-      if (this.pageEvents.length === 0) {
+      this.setCategories()
+
+      this.page = 0;
+      this.firstPage = true
+
+      if (this.events.length === 0) {
         this.noEvents = true
       }
     },
-    calculateTotalPages() {
-      this.totalPages = 0;
-
-      let entries = this.events.length;
-
-      while (entries > 0) {
-        this.totalPages += 1;
-        entries -= 10
-      }
-    },
-    setPages() {
-      // resets pagination
-      this.page1 = 1;
-      this.page2 = null;
-      this.page3 = null;
-
-      if (this.totalPages > 1) {
-        this.page2 = 2
-      }
-      if (this.totalPages > 2) {
-        this.page3 = 3
-      }
-      this.pageEvents = this.events.slice((this.page * 10), (this.page * 10) + 10)
-    },
     async pageChange(pageNo) {
-      this.page = pageNo;
-
-      if (this.page === 0) { // Page 1
-        this.page1 = 1;
-
-        if (this.totalPages > 1) { // More than 1 page
-          this.page2 = 2
-        }
-
-        if (this.totalPages > 2) { // More than 2 pages
-          this.page3 = 3
-        }
-
-      } else if (this.page === this.totalPages-1) { // Last known page
-
-        await this.getPage(this.page + 1)
-
-        if (this.totalPages === 2) {
-          this.page1 = 1;
-          this.page2 = 2
-        } else {
-          this.page1 = this.page-1;
-          this.page2 = this.page;
-          this.page3 = this.page+1;
-        }
-      } else { // Any other page
-        this.page1 = this.page;
-        this.page2 = this.page+1;
-        this.page3 = this.page+2;
+      console.log(pageNo)
+      if (pageNo === 0) {
+        this.firstPage = true
+      } else {
+        this.firstPage = false
       }
-      this.pageEvents = this.events.slice((this.page * 10), (this.page * 10) + 10)
+      this.page = pageNo;
+      await this.getPage(pageNo)
     },
     async getPage(pageNo) {
+
       let searchQuery = this.searchQuery
 
       const startIndex = pageNo * 10
 
-      if (pageNo === 0) { // If first page get first 3 pages
-        searchQuery += "startIndex=" + 0 + "&count=30"
-      } else {
-        searchQuery += "startIndex=" + startIndex + "&count=10"
-      }
+      searchQuery += "startIndex=" + startIndex + "&count=11"
 
-      await Api.search(searchQuery).then((res) => {
+      await Api.search(searchQuery).then(async (res) => {
+        this.events = []
+        this.finalPage = true
         if(res.data.length > 0) {
           for(let i=0; i < res.data.length; i++) {
-            this.events.push(res.data[i])
+            if (i === 10) {
+              this.finalPage = false
+            } else {
+              this.events.push(res.data[i])
+            }
           }
-          this.setCategories(startIndex)
+          this.setCategories()
+          await this.getOrganizerIds()
         }
       }).catch((e) => {
         console.log(e)
       })
-
+      this.pageEvents = this.events
     },
     pageUp() {
-      if (this.page < this.totalPages-1) {
+      console.log('PageUp', this.finalPage)
+      if (!this.finalPage) {
         this.pageChange(this.page+1)
       }
     },
     pageDown() {
-      if (this.page > 0) {
+      if (!this.firstPage) {
         this.pageChange(this.page-1)
       }
     },
@@ -291,22 +246,19 @@ export default {
         this.update()
       }
     },
-    // async getEventImages(startIndex) {
-    //   for (let i=startIndex; i < this.events.length; i++) {
-    //     await Api.getEventImage(this.events[i].eventId).then((res) => {
-    //       if (res.headers['content-type'] === "image/jpeg") {
-    //         this.events[i].src = 'data:' + res.headers['content-type'] + ";base64," + Buffer.from(res.data, 'binary').toString('base64');
-    //       } else {
-    //         this.events[i].src
-    //         console.log(res.data)
-    //       }
-    //     }).catch(() => {
-    //
-    //     })
-    //   }
-    // },
+    async getOrganizerIds() {
+      for (let i=0; i < this.events.length; i++) {
+        await Api.getOneEvent(this.events[i].eventId).then((res) => {
+          this.events[i].organizerId = res.data.organizerId
+        })
+      }
+    },
+    loggedOut() {
+      return
+    }
   },
   async mounted() {
+    await this.getCategories()
     await this.update()
   }
 }
