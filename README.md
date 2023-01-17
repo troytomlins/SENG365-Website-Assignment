@@ -1,4 +1,4 @@
-# chat-app
+# SENG365 Website Assignment
 
 ## Project setup
 ```
